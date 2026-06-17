@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">SAP Codelab</string>
+    <string name="action_show_all">Show All</string>
+    <string name="action_show_open">Show Open</string>
+    <string name="memo_title">Title</string>
+    <string name="new_memo">New Memo</string>
+    <string name="memo_text">Text</string>
+    <string name="action_save">Save</string>
+    <string name="memo_title_empty_error">Please provide a title for this memo</string>
+    <string name="memo_text_empty_error">Please provide a memo description</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Location reminders</string>
+    <string name="notification_channel_description">Reminders shown when you reach a memo\'s location</string>
+
+    <!-- Location picker -->
+    <string name="memo_pick_location">Pick location</string>
+    <string name="memo_change_location">Change location</string>
+    <string name="memo_no_location">No location set</string>
+    <string name="memo_location_format">Location: %1$.5f, %2$.5f</string>
+    <string name="map_confirm_location">Confirm location</string>
+    <string name="map_pick_hint">Tap the map to choose a location</string>
+    <string name="map_title">Select location</string>
+    <string name="map_navigate_back">Go back</string>
+
+    <!-- Permission rationale -->
+    <string name="permission_location_title">Location access</string>
+    <string name="permission_location_rationale">Location access is needed to remind you when you reach a memo\'s location.</string>
+    <string name="permission_notification_rationale">Notification permission is needed to show location reminders.</string>
+    <string name="permission_rationale_continue">Continue</string>
+    <string name="permission_rationale_not_now">Not now</string>
+</resources>
