@@ -1,18 +1,29 @@
 package com.sap.codelab.view.map
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -23,11 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -86,9 +99,43 @@ internal fun MapPickerScreen(
         }
     }
 
-    val myLocationOverlay = remember {
-        if (RuntimePermissionHelper.hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
+    var myLocationOverlay by remember { mutableStateOf<MyLocationNewOverlay?>(null) }
+    var hasLocationPermission by remember {
+        mutableStateOf(RuntimePermissionHelper.hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION))
+    }
+
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) {
+        hasLocationPermission = RuntimePermissionHelper.hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (!hasLocationPermission) {
+            // After repeated denials the system stops showing the prompt; send the user to settings instead.
+            val activity = context.findActivity()
+            val canPromptAgain = activity != null && ActivityCompat.shouldShowRequestPermissionRationale(
+                activity,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+            showSettingsDialog = !canPromptAgain
+        }
+    }
+
+    // Re-ask for location whenever the picker opens without it (e.g. the user declined earlier).
+    LaunchedEffect(Unit) {
+        if (!hasLocationPermission) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                ),
+            )
+        }
+    }
+
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission && myLocationOverlay == null) {
+            myLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
                 enableMyLocation()
                 mapView.overlays.add(this)
                 if (initial == null) {
@@ -102,8 +149,6 @@ internal fun MapPickerScreen(
                     }
                 }
             }
-        } else {
-            null
         }
     }
 
@@ -139,6 +184,30 @@ internal fun MapPickerScreen(
         }
     }
 
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = { Text(stringResource(R.string.permission_location_title)) },
+            text = { Text(stringResource(R.string.permission_location_settings)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSettingsDialog = false
+                    context.startActivity(
+                        Intent(
+                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.fromParts("package", context.packageName, null),
+                        ),
+                    )
+                }) { Text(stringResource(R.string.permission_open_settings)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSettingsDialog = false }) {
+                    Text(stringResource(R.string.permission_rationale_not_now))
+                }
+            },
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -153,32 +222,45 @@ internal fun MapPickerScreen(
                 },
             )
         },
-        bottomBar = {
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = padding.calculateTopPadding()),
+        ) {
+            AndroidView(
+                factory = { mapView },
+                update = { view ->
+                    view.overlays.removeAll { it is Marker }
+                    state.selected?.let { selected ->
+                        val marker = Marker(view).apply {
+                            position = GeoPoint(selected.latitude, selected.longitude)
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            title = view.context.getString(R.string.map_title)
+                        }
+                        view.overlays.add(marker)
+                    }
+                    view.invalidate()
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
             Button(
                 onClick = { model.onIntent(MapPickerIntent.Confirm) },
                 enabled = state.selected != null,
-                modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(16.dp),
             ) {
                 Text(stringResource(R.string.map_confirm_location))
             }
-        },
-    ) { padding ->
-        AndroidView(
-            factory = { mapView },
-            update = { view ->
-                // Re-draw the marker to match the currently selected point.
-                view.overlays.removeAll { it is Marker }
-                state.selected?.let { selected ->
-                    val marker = Marker(view).apply {
-                        position = GeoPoint(selected.latitude, selected.longitude)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                        title = view.context.getString(R.string.map_title)
-                    }
-                    view.overlays.add(marker)
-                }
-                view.invalidate()
-            },
-            modifier = Modifier.fillMaxSize().padding(padding),
-        )
+        }
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

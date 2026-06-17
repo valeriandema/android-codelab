@@ -29,4 +29,6 @@
     <string name="permission_notification_rationale">Notification permission is needed to show location reminders.</string>
     <string name="permission_rationale_continue">Continue</string>
     <string name="permission_rationale_not_now">Not now</string>
+    <string name="permission_location_settings">Location access has been denied. Enable it in the app settings to show your current location on the map.</string>
+    <string name="permission_open_settings">Open settings</string>
 </resources>
