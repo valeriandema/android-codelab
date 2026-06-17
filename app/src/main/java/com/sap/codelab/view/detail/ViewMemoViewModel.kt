@@ -9,9 +9,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * MVI ViewModel for the read-only [ViewMemo] detail screen.
- */
 @HiltViewModel
 internal class ViewMemoViewModel @Inject constructor(
     private val repository: IMemoRepository,

@@ -10,6 +10,7 @@ import com.google.android.gms.location.GeofencingEvent
 import com.sap.codelab.di.IoDispatcher
 import com.sap.codelab.domain.notification.MemoReminder
 import com.sap.codelab.domain.repository.IMemoRepository
+import com.sap.codelab.domain.usecase.MarkMemoDoneUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,9 @@ internal class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     @Inject
     lateinit var reminder: MemoReminder
+
+    @Inject
+    lateinit var markMemoDone: MarkMemoDoneUseCase
 
     @Inject
     lateinit var geofenceManager: GeofenceManager
@@ -62,12 +66,11 @@ internal class GeofenceBroadcastReceiver : BroadcastReceiver() {
             try {
                 memoIds.forEach { id ->
                     val memo = repository.getMemoById(id)
-                    // Skip memos the user already completed; also drop their stale geofence.
-                    if (memo.isDone) {
-                        geofenceManager.removeGeofence(id)
-                    } else {
+                    if (!memo.isDone) {
                         reminder.showMemoReminder(memo)
+                        markMemoDone(memo)
                     }
+                    geofenceManager.removeGeofence(id)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to show reminder", e)
