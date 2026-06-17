@@ -1,6 +1,5 @@
 package com.sap.codelab.view.create
 
-import com.sap.codelab.domain.model.Memo
 import com.sap.codelab.mvi.UiEffect
 import com.sap.codelab.mvi.UiIntent
 import com.sap.codelab.mvi.UiState
@@ -8,7 +7,7 @@ import com.sap.codelab.mvi.UiState
 /**
  * MVI contract for the create-memo screen: the picked location and any validation errors.
  *
- * The title/description text lives in the input fields (ViewBinding) and is passed in with
+ * The title/description text lives in the composable's own input fields and is passed in with
  * [CreateMemoIntent.Save]; the state only tracks what the screen must re-render declaratively.
  */
 internal data class CreateMemoState(
@@ -41,6 +40,6 @@ internal sealed interface CreateMemoEffect : UiEffect {
     /** Proactively request location/notification permissions so the geofence can be registered. */
     data object RequestPermissions : CreateMemoEffect
 
-    /** The memo was persisted; the activity registers its geofence (if any) and finishes. */
-    data class MemoSaved(val memo: Memo) : CreateMemoEffect
+    /** The memo was persisted (its geofence, if any, is registered by the ViewModel); navigate back. */
+    data object Saved : CreateMemoEffect
 }

@@ -1,11 +1,12 @@
 package com.sap.codelab.mvi
 
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,18 +81,15 @@ internal abstract class MviViewModel<I : UiIntent, S : UiState, E : UiEffect>(
     }
 }
 
-/**
- * Collects [flow] only while this activity is at least STARTED, automatically pausing on stop and
- * resuming on restart. This is the safe way to observe MVI [MviViewModel.state] and
- * [MviViewModel.effects] from an activity.
- */
-internal fun <T> AppCompatActivity.collectWhileStarted(
-    flow: Flow<T>,
-    action: suspend (T) -> Unit,
+@Composable
+internal fun <E> CollectEffects(
+    effects: Flow<E>,
+    onEffect: suspend (E) -> Unit,
 ) {
-    lifecycleScope.launch {
-        repeatOnLifecycle(Lifecycle.State.STARTED) {
-            flow.collect(action)
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(effects, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            effects.collect(onEffect)
         }
     }
 }

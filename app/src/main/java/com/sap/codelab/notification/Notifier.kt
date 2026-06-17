@@ -11,10 +11,10 @@ import androidx.core.app.NotificationManagerCompat
 import com.sap.codelab.R
 import com.sap.codelab.domain.model.Memo
 import com.sap.codelab.domain.notification.MemoReminder
+import com.sap.codelab.MainActivity
+import com.sap.codelab.EXTRA_MEMO_ID
 import com.sap.codelab.utils.extensions.truncate
 import com.sap.codelab.utils.permissions.RuntimePermissionHelper
-import com.sap.codelab.view.detail.BUNDLE_MEMO_ID
-import com.sap.codelab.view.detail.ViewMemo
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,8 +67,8 @@ internal class Notifier @Inject constructor(
             return
         }
 
-        val openIntent = Intent(context, ViewMemo::class.java).apply {
-            putExtra(BUNDLE_MEMO_ID, memo.id)
+        val openIntent = Intent(context, MainActivity::class.java).apply {
+            putExtra(EXTRA_MEMO_ID, memo.id)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val contentIntent = PendingIntent.getActivity(

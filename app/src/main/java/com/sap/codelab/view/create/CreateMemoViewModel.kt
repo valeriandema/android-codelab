@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.sap.codelab.di.IoDispatcher
 import com.sap.codelab.domain.usecase.SaveMemoResult
 import com.sap.codelab.domain.usecase.SaveMemoUseCase
+import com.sap.codelab.geofence.GeofenceManager
 import com.sap.codelab.mvi.MviViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class CreateMemoViewModel @Inject constructor(
     private val saveMemo: SaveMemoUseCase,
+    private val geofenceManager: GeofenceManager,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : MviViewModel<CreateMemoIntent, CreateMemoState, CreateMemoEffect>(CreateMemoState()) {
 
@@ -47,7 +49,10 @@ internal class CreateMemoViewModel @Inject constructor(
 
                 is SaveMemoResult.Success -> {
                     setState { copy(titleError = false, descriptionError = false) }
-                    sendEffect(CreateMemoEffect.MemoSaved(result.memo))
+                    if (result.memo.hasLocation()) {
+                        geofenceManager.addGeofence(result.memo)
+                    }
+                    sendEffect(CreateMemoEffect.Saved)
                 }
             }
         }

@@ -18,29 +18,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.sap.codelab.view.home.Home"
+            android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.sap.codelab.view.create.CreateMemo"
-            android:exported="false"
-            android:label="@string/new_memo"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name="com.sap.codelab.view.detail.ViewMemo"
-            android:exported="false"
-            android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name="com.sap.codelab.view.map.MapPickerActivity"
-            android:exported="false"
-            android:label="@string/map_title"
-            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>
