@@ -6,6 +6,12 @@ pluginManagement {
     }
 }
 
+plugins {
+    // Resolves Java toolchains (incl. the daemon JVM pinned in gradle/gradle-daemon-jvm.properties),
+    // downloading a matching JDK when none is installed locally.
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {

@@ -58,9 +58,6 @@ internal class Notifier @Inject constructor(
      *
      * @param memo - the memo whose location was reached.
      */
-    // The POST_NOTIFICATIONS permission is guarded by RuntimePermissionHelper.canPostNotifications()
-    // below, but lint's MissingPermission inspection cannot follow that check across the call
-    // boundary, so it is suppressed here.
     @SuppressLint("MissingPermission")
     override fun showMemoReminder(memo: Memo) {
         if (!RuntimePermissionHelper.canPostNotifications(context)) {
